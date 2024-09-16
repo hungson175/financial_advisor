@@ -11,7 +11,7 @@ from fad.tools import websearch_tools, writer
 from fad.tools.compressors import ContextCompressor
 from fad.tools.scrapers.scraper import Scraper
 
-MAIN_QUERY = "Use cases of GPU as a service in Japan"
+MAIN_QUERY = "Impact of Generative AI on software development: how programmers stay relevant ?"
 MAX_SUB_QUERIES = 3
 MAX_SEARCH_RESULTS = 8
 
