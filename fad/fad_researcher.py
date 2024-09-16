@@ -18,7 +18,6 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 REPORT_FILE = 'report.md'
 
-MAIN_QUERY = "Impact of AI on Software Development ?"
 MAX_SUB_QUERIES = 3
 MAX_SEARCH_RESULTS = 8
 
@@ -118,7 +117,7 @@ class Researcher:
 
 
 if __name__ == "__main__":
-    researcher = Researcher(query=MAIN_QUERY)
+    researcher = Researcher(query="Impact of Generative AI on Software Development")
     rs = asyncio.run(researcher.research())
 
     # write report to markdown file: report_genAI_on_SE.md

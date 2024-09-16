@@ -1,105 +1,120 @@
-# import logging
 import asyncio
-import os
 
+from backend.report_type import DetailedReport
+from gpt_researcher.utils.enum import Tone
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv
-from langchain_openai import OpenAIEmbeddings
 
-from fad.generators.generate_agent import choose_agent, GeneratedAgent
-from fad.generators.generate_sub_queries import generate_sub_queries, SubQueries
-from fad.tools import websearch_tools, writer
-from fad.tools.compressors import ContextCompressor
-from fad.tools.scrapers.scraper import Scraper
+from fad.fad_researcher import Researcher
 
-MAIN_QUERY = "Impact of Generative AI on software development: how programmers stay relevant ?"
-MAX_SUB_QUERIES = 3
-MAX_SEARCH_RESULTS = 8
+QUERY = "Opportunity and Challenges coming from Generative AI for retails industry"
+
+load_dotenv()
 
 
-class Logger:
-    def info(self, str):
-        print(str)
-
-
-async def produce_sub_context(sub_query: str, scraped_contents: dict, embeddings):
-    compressor = ContextCompressor(scraped_contents[sub_query], embeddings)
-    rs = await compressor.async_get_context(sub_query)
-    return rs
-
-
-async def produce_sub_summaries(sub_query: str, scraped_contents: dict, embeddings):
-    compressor = ContextCompressor(scraped_contents[sub_query], embeddings)
-    docs = await compressor.async_get_relevant_docs(sub_query)
-    return {"query": sub_query, "summaries": docs}
-
-async def research(query: str):
-    """
-    This program takes an input as a question/topic, then:
-    1. Generate an "expert" (called server) for that topic
-    2. Using the expert to generate several search sub-queries for that topic
-    3. Retrieve url,description for each search query (including the original query)
-    4. For each search sub-query:
-        4.1 Scrape the content of the first top_n urls
-        4.2 Return the content of the first top_n urls: [(url,list(content) )]
-    """
-    load_dotenv()
-    logging = Logger()
-
-    logging.info('Choose an agent for the query ...')
-    agent_data: GeneratedAgent = choose_agent(query)  # server, agent_role_prompt
-    logging.info(f"Agent: \n\tRole = {agent_data.server}  \n\tDescription: {agent_data.agent_role_prompt}...")
-    sub_queries: SubQueries = generate_sub_queries(
+async def generate_report(query, report_type="research_report", report_source="web_search", tone=Tone.Formal,
+                          websocket=None):
+    detailed_report = DetailedReport(
         query=query,
-        agent_role=agent_data.agent_role_prompt,
-        max_queries=MAX_SUB_QUERIES)
-    # print(sub_queries)
-    sub_queries.list.append(query)  # add the original query
-    logging.info(f"Research based on sub-queries: {sub_queries.list} ...")
-    search_results = websearch_tools.search_queries(sub_queries.list, max_results=MAX_SEARCH_RESULTS)
-    scraped_contents = {}
-    logging.info("Scraping contents...")
-    for sub_query in sub_queries.list:
-        logging.info(f"\tScraping for sub-query: {sub_query} ...")
-        docs = search_results[sub_query]
-        urls = [doc['url'] for doc in docs]
-        scraped_contents[sub_query] = Scraper.scrape_multiple_urls(urls)  # list of content, not only 1 !
-    # Now split the content for each sub-query to save to database
-    OPENAI_EMBEDDING_MODEL = os.environ.get("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
-    embeddings = OpenAIEmbeddings(model=OPENAI_EMBEDDING_MODEL, check_embedding_ctx_length=False)
+        report_type=report_type,
+        report_source=report_source,
+        source_urls=[],  # You can provide initial source URLs if available
+        # config_path="path/to/config.yaml",
+        tone=tone,
+        websocket=websocket,
+        subtopics=[],  # You can provide predefined subtopics if desired
+        headers={}  # Add any necessary HTTP headers
+    )
 
-    # sub_contexts = await asyncio.gather(
-    #     *[
-    #         # compressor.__process_sub_query(sub_query, scraped_data)
-    #         produce_sub_context(sub_query, scraped_contents, embeddings)
-    #         for sub_query in sub_queries.list
-    #     ])
-    summaries = await asyncio.gather(
-        *[
-            produce_sub_summaries(sub_query, scraped_contents, embeddings)
-            for sub_query in sub_queries.list
-        ])
-    sub_contexts = []
-    for summ in summaries:
-        # sub_query = summ["query"]
-        docs = summ["summaries"]
-        sub_contexts.append(ContextCompressor.pretty_print_docs(docs, MAX_SEARCH_RESULTS))
+    final_report = await detailed_report.run()
+    return final_report
 
-    logging.info("Done researching context !")
-    logging.info("Start writing ...")
-    report = await writer.write_report(
-        query=query,
-        context=sub_contexts,
-        agent_role_prompt=agent_data.agent_role_prompt)
-    logging.info(f"======\n Final report:\n {report}")
-    # write report to markdown file: report_VNG_investment.md
-    with open('report_genAI_on_SE.md', 'w') as f:
-        f.write(report.content)
+
+def get_report_in_vietnamese(query: str, report_type: str) -> dict:
+    report = asyncio.run(generate_report(query, report_type))
+    llm = ChatOpenAI(model_name="gpt-4o")
+    prompt_template = ChatPromptTemplate.from_messages([
+        ("system",
+         """You are very skillful translator. 
+         Your goal is to translate the following report into Vietnamese - make sure to keep the meaning,tone, and references of the report intact."""),
+        # this will be auto generate from query
+        ("human", "{report}")
+    ])
+    translator = prompt_template | llm
+    result = translator.invoke(input={"report": report})
     return {
-        "summaries": summaries,
-        "report": report.content
+        "en": report,
+        "vi": result.content
     }
 
 
-# logging.basicConfig(level=logging.INFO)
+def generate_file_name(query: str):
+    system_prompt = """Given the query, your task is to generate a file name for the report using 3-5 words.
+    Expected output: The output file name WITHOUT extension.
+
+    Examples:
+        query: "The Impact of Substances on Creativity and Innovation Throughout History"
+        output: "impact_substances_creativity_innovation_history"
+
+        query: "How does the brain process information?"
+        output: "brain_process_information"
+
+        query: "What is the impact of AI on the job market?"
+        output: "impact_ai_job_market"
+    """
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", system_prompt),
+        ("human", "{query}")
+    ])
+
+    llm = ChatOpenAI(model_name="gpt-4o-mini", temperature=0.15)
+    chain = prompt | llm
+    return chain.invoke({"query": query})
+
+
+def write_long_report():
+    query = QUERY
+    english_file_name, vietnamese_file_name = gen_report_file_names(query)
+    report_type = "research_report"
+    report = get_report_in_vietnamese(query, report_type)
+    # save the report to files
+    with open(english_file_name, "w") as f:
+        f.write(report["en"])
+    with open(vietnamese_file_name, "w") as f:
+        f.write(report["vi"])
+    print(f"Report saved to {english_file_name} and {vietnamese_file_name}")
+
+
+def gen_report_file_names(query):
+    file_prefix = generate_file_name(query)
+    english_file_name = file_prefix.content + "_en.md"
+    vietnamese_file_name = file_prefix.content + "_vi.md"
+    return english_file_name, vietnamese_file_name
+
+
+def write_short_report():
+    researcher = Researcher(query=QUERY)
+    rs = asyncio.run(researcher.research())
+    # write report to markdown file: report_genAI_on_SE.md
+    report = rs["report"]
+    en_fn, _ = gen_report_file_names(QUERY)
+    with open(en_fn, 'w') as f:
+        f.write(report)
+    all_docs = []
+    summaries = rs["summaries"]
+    for summ in summaries:
+        docs = summ["summaries"]
+        all_docs.extend(docs)
+    # Researcher.save_to_vector_db(all_docs)
+
+
 if __name__ == "__main__":
-    asyncio.run(research(query=MAIN_QUERY))
+    # query = "The Impact of AI on Software Outsourcing Companies: Strategies for Adaptation"
+    # query = "Adapting to the Impact of Generative AI: How HR Managers Can Stay Relevant ?"
+    # get user input to write long/short report  ?
+    ls_type = input("Write long or short report ? (l: long/s: short): ")
+    if ls_type.lower() == 's' or ls_type.lower() == 'short':
+        write_short_report()
+    else:
+        write_long_report()
