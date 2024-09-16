@@ -1,7 +1,9 @@
 import asyncio
 
 from backend.report_type import DetailedReport
-from gpt_researcher.utils.enum import Tone
+# from gpt_researcher.report_type import DetailedReport
+
+
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv
@@ -13,18 +15,17 @@ QUERY = "Opportunity and Challenges coming from Generative AI for retails indust
 load_dotenv()
 
 
-async def generate_report(query, report_type="research_report", report_source="web_search", tone=Tone.Formal,
-                          websocket=None):
+async def generate_report(query, report_type="research_report", report_source="web_search", websocket=None):
     detailed_report = DetailedReport(
         query=query,
         report_type=report_type,
         report_source=report_source,
         source_urls=[],  # You can provide initial source URLs if available
-        # config_path="path/to/config.yaml",
-        tone=tone,
+        config_path=None,
+        # tone=tone,
         websocket=websocket,
         subtopics=[],  # You can provide predefined subtopics if desired
-        headers={}  # Add any necessary HTTP headers
+        # headers={}  # Add any necessary HTTP headers
     )
 
     final_report = await detailed_report.run()

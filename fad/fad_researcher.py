@@ -107,9 +107,23 @@ class Researcher:
         }
 
     @classmethod
-    def save_to_vector_db(cls, summaries):
-        vector_store = Chroma.from_documents(
-            documents=summaries,
+    def add_tag_to_docs(cls, documents, tags: dict):
+        if tags is None:
+            return documents
+        tagged_docs = []
+        for doc in documents:
+            tdoc = doc
+            # add tag to doc.metadata
+            for k, v in tags.items():
+                tdoc.metadata[k] = v
+            tagged_docs.append(tdoc)
+        return tagged_docs
+
+    @classmethod
+    def save_to_vector_db(cls, documents, tags: dict = None):
+        tagged_docs = Researcher.add_tag_to_docs(documents, tags)
+        Chroma.from_documents(
+            documents=tagged_docs,
             collection_name="rag-chroma",
             embedding=OpenAIEmbeddings(),
             persist_directory="./.chroma",
@@ -117,7 +131,7 @@ class Researcher:
 
 
 if __name__ == "__main__":
-    researcher = Researcher(query="Impact of Generative AI on Software Development")
+    researcher = Researcher(query="Should I invest into FPT now ?")
     rs = asyncio.run(researcher.research())
 
     # write report to markdown file: report_genAI_on_SE.md
@@ -130,4 +144,6 @@ if __name__ == "__main__":
     for summ in summaries:
         docs = summ["summaries"]
         all_docs.extend(docs)
-    # Researcher.save_to_vector_db(all_docs)
+    tag = "FPT"
+
+    Researcher.save_to_vector_db(tags={"ticker": "FPT"}, documents=all_docs)
