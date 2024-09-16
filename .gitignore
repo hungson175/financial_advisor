@@ -1,0 +1,111 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+
+# Virtual Environment
+venv/
+env/
+.env
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+
+# Project specific
+.env
+*.sqlite3
+
+# Dependency directories
+node_modules/
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# Poetry
+poetry.lock
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+.cache
+
+# mypy
+.mypy_cache/
+
+# pytest
+.pytest_cache/
+
+# Sphinx documentation
+docs/_build/
+
+# Backup files
+*.bak
+# PyCharm
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# VS Code
+.vscode/
+*.code-workspace
+.history/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+*.psql
+*.mysql
+*.pgsql
+*.mdb
+*.accdb
+
+# Virtual environment
+venv/
+env/
+.env/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class

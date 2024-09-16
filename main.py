@@ -1,0 +1,105 @@
+# import logging
+import asyncio
+import os
+
+from dotenv import load_dotenv
+from langchain_openai import OpenAIEmbeddings
+
+from fad.generators.generate_agent import choose_agent, GeneratedAgent
+from fad.generators.generate_sub_queries import generate_sub_queries, SubQueries
+from fad.tools import websearch_tools, writer
+from fad.tools.compressors import ContextCompressor
+from fad.tools.scrapers.scraper import Scraper
+
+MAIN_QUERY = "Use cases of GPU as a service in Japan"
+MAX_SUB_QUERIES = 3
+MAX_SEARCH_RESULTS = 8
+
+
+class Logger:
+    def info(self, str):
+        print(str)
+
+
+async def produce_sub_context(sub_query: str, scraped_contents: dict, embeddings):
+    compressor = ContextCompressor(scraped_contents[sub_query], embeddings)
+    rs = await compressor.async_get_context(sub_query)
+    return rs
+
+
+async def produce_sub_summaries(sub_query: str, scraped_contents: dict, embeddings):
+    compressor = ContextCompressor(scraped_contents[sub_query], embeddings)
+    docs = await compressor.async_get_relevant_docs(sub_query)
+    return {"query": sub_query, "summaries": docs}
+
+async def research(query: str):
+    """
+    This program takes an input as a question/topic, then:
+    1. Generate an "expert" (called server) for that topic
+    2. Using the expert to generate several search sub-queries for that topic
+    3. Retrieve url,description for each search query (including the original query)
+    4. For each search sub-query:
+        4.1 Scrape the content of the first top_n urls
+        4.2 Return the content of the first top_n urls: [(url,list(content) )]
+    """
+    load_dotenv()
+    logging = Logger()
+
+    logging.info('Choose an agent for the query ...')
+    agent_data: GeneratedAgent = choose_agent(query)  # server, agent_role_prompt
+    logging.info(f"Agent: \n\tRole = {agent_data.server}  \n\tDescription: {agent_data.agent_role_prompt}...")
+    sub_queries: SubQueries = generate_sub_queries(
+        query=query,
+        agent_role=agent_data.agent_role_prompt,
+        max_queries=MAX_SUB_QUERIES)
+    # print(sub_queries)
+    sub_queries.list.append(query)  # add the original query
+    logging.info(f"Research based on sub-queries: {sub_queries.list} ...")
+    search_results = websearch_tools.search_queries(sub_queries.list, max_results=MAX_SEARCH_RESULTS)
+    scraped_contents = {}
+    logging.info("Scraping contents...")
+    for sub_query in sub_queries.list:
+        logging.info(f"\tScraping for sub-query: {sub_query} ...")
+        docs = search_results[sub_query]
+        urls = [doc['url'] for doc in docs]
+        scraped_contents[sub_query] = Scraper.scrape_multiple_urls(urls)  # list of content, not only 1 !
+    # Now split the content for each sub-query to save to database
+    OPENAI_EMBEDDING_MODEL = os.environ.get("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
+    embeddings = OpenAIEmbeddings(model=OPENAI_EMBEDDING_MODEL, check_embedding_ctx_length=False)
+
+    # sub_contexts = await asyncio.gather(
+    #     *[
+    #         # compressor.__process_sub_query(sub_query, scraped_data)
+    #         produce_sub_context(sub_query, scraped_contents, embeddings)
+    #         for sub_query in sub_queries.list
+    #     ])
+    summaries = await asyncio.gather(
+        *[
+            produce_sub_summaries(sub_query, scraped_contents, embeddings)
+            for sub_query in sub_queries.list
+        ])
+    sub_contexts = []
+    for summ in summaries:
+        # sub_query = summ["query"]
+        docs = summ["summaries"]
+        sub_contexts.append(ContextCompressor.pretty_print_docs(docs, MAX_SEARCH_RESULTS))
+
+    logging.info("Done researching context !")
+    logging.info("Start writing ...")
+    report = await writer.write_report(
+        query=query,
+        context=sub_contexts,
+        agent_role_prompt=agent_data.agent_role_prompt)
+    logging.info(f"======\n Final report:\n {report}")
+    # write report to markdown file: report.md
+    with open('report.md', 'w') as f:
+        f.write(report.content)
+    return {
+        "summaries": summaries,
+        "report": report.content
+    }
+
+
+# logging.basicConfig(level=logging.INFO)
+if __name__ == "__main__":
+    asyncio.run(research(query=MAIN_QUERY))
