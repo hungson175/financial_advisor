@@ -121,7 +121,7 @@ if __name__ == "__main__":
     researcher = Researcher(query=MAIN_QUERY)
     rs = asyncio.run(researcher.research())
 
-    # write report to markdown file: report.md
+    # write report to markdown file: report_genAI_on_SE.md
     report = rs["report"]
     with open(REPORT_FILE, 'w') as f:
         f.write(report)

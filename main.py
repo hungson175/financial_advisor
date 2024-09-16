@@ -91,8 +91,8 @@ async def research(query: str):
         context=sub_contexts,
         agent_role_prompt=agent_data.agent_role_prompt)
     logging.info(f"======\n Final report:\n {report}")
-    # write report to markdown file: report.md
-    with open('report.md', 'w') as f:
+    # write report to markdown file: report_VNG_investment.md
+    with open('report_genAI_on_SE.md', 'w') as f:
         f.write(report.content)
     return {
         "summaries": summaries,
