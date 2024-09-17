@@ -1,5 +1,6 @@
 # import logging
 import asyncio
+import datetime
 import os
 
 from dotenv import load_dotenv
@@ -131,12 +132,16 @@ class Researcher:
 
 
 if __name__ == "__main__":
-    researcher = Researcher(query="Should I invest into FPT now ?")
+    researcher = Researcher(query="GPU as a service market share")
     rs = asyncio.run(researcher.research())
 
     # write report to markdown file: report_genAI_on_SE.md
     report = rs["report"]
-    with open(REPORT_FILE, 'w') as f:
+    # get current formatted date and time for the report file name
+    date_time = datetime.datetime.now()
+    date_time_formatted = date_time.strftime("%Y-%m-%d_%H-%M-%S")
+    report_file_name = f"../doc_reports/report + {date_time_formatted}.md"
+    with open(report_file_name, 'w') as f:
         f.write(report)
 
     all_docs = []
@@ -146,4 +151,4 @@ if __name__ == "__main__":
         all_docs.extend(docs)
     tag = "FPT"
 
-    Researcher.save_to_vector_db(tags={"ticker": "FPT"}, documents=all_docs)
+    # Researcher.save_to_vector_db(tags={"ticker": "FPT"}, documents=all_docs)
