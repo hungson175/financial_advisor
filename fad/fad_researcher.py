@@ -132,7 +132,7 @@ class Researcher:
 
 
 if __name__ == "__main__":
-    researcher = Researcher(query="GPU as a service market share")
+    researcher = Researcher(query="Impact of Generative AI in Automotive Industry")
     rs = asyncio.run(researcher.research())
 
     # write report to markdown file: report_genAI_on_SE.md

@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 
 from fad.fad_researcher import Researcher
 
-QUERY = "GPU as a service market"
+QUERY = "Impact of Generative AI in Automotive Industry"
 
 load_dotenv()
 

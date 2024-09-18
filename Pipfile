@@ -16,6 +16,7 @@ google-api-python-client = "*"
 chromadb = "*"
 gpt-researcher = "*"
 vnstock3 = "*"
+sqlalchemy = "*"
 
 [dev-packages]
 
