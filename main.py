@@ -10,7 +10,8 @@ from dotenv import load_dotenv
 
 from fad.fad_researcher import Researcher
 
-QUERY = "Research on FnB  market in Vietnam"
+# QUERY = "Research on FnB  market in Vietnam"
+QUERY = "Cashless payment: the most impactful value added services for payment apps, lessons learned from Chinese tech-giants"
 
 load_dotenv()
 
@@ -74,8 +75,7 @@ def generate_file_name(query: str):
     return chain.invoke({"query": query})
 
 
-def write_long_report():
-    query = QUERY
+def write_long_report(query: str = QUERY):
     english_file_name, vietnamese_file_name = gen_report_file_names(query)
     report_type = "research_report"
     report = get_report_in_vietnamese(query, report_type)
@@ -87,15 +87,15 @@ def write_long_report():
     print(f"Report saved to {english_file_name} and {vietnamese_file_name}")
 
 
-def gen_report_file_names(query):
+def gen_report_file_names(query: str):
     file_prefix = generate_file_name(query)
     english_file_name = file_prefix.content + "_en.md"
     vietnamese_file_name = file_prefix.content + "_vi.md"
     return english_file_name, vietnamese_file_name
 
 
-def write_short_report():
-    researcher = Researcher(query=QUERY)
+def write_short_report(query: str = QUERY):
+    researcher = Researcher(query=query)
     rs = asyncio.run(researcher.research())
     # write report to markdown file: report_genAI_on_SE.md
     report = rs["report"]
@@ -110,12 +110,18 @@ def write_short_report():
     # Researcher.save_to_vector_db(all_docs)
 
 
-if __name__ == "__main__":
+def main():
     # query = "The Impact of AI on Software Outsourcing Companies: Strategies for Adaptation"
     # query = "Adapting to the Impact of Generative AI: How HR Managers Can Stay Relevant ?"
     # get user input to write long/short report  ?
-    ls_type = input("Write long or short report ? (l: long/s: short): ")
+    # ls_type = input("Write long or short report ? (l: long/s: short): ")
+    # query = input("Your research topic: ")
+    ls_type = 'l'
     if ls_type.lower() == 's' or ls_type.lower() == 'short':
-        write_short_report()
+        write_short_report(query=QUERY)
     else:
-        write_long_report()
+        write_long_report(query=QUERY)
+
+
+if __name__ == "__main__":
+    main()
