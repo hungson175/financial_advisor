@@ -11,7 +11,8 @@ from dotenv import load_dotenv
 from fad.fad_researcher import Researcher
 
 # QUERY = "Research on FnB  market in Vietnam"
-QUERY = "Cashless payment: the most impactful value added services for payment apps, lessons learned from Chinese tech-giants"
+QUERY = "Systematic method to compare impact of a value added services on a Chinese cashless payment platform"
+# QUERY = "Cashless payment: the most impactful value added services for payment apps, lessons learned from Chinese tech-giants"
 
 load_dotenv()
 
@@ -116,7 +117,7 @@ def main():
     # get user input to write long/short report  ?
     # ls_type = input("Write long or short report ? (l: long/s: short): ")
     # query = input("Your research topic: ")
-    ls_type = 'l'
+    ls_type = 's'
     if ls_type.lower() == 's' or ls_type.lower() == 'short':
         write_short_report(query=QUERY)
     else:
