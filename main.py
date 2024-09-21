@@ -11,9 +11,10 @@ from dotenv import load_dotenv
 from fad.fad_researcher import Researcher
 
 # QUERY = "Research on FnB  market in Vietnam"
-QUERY = "Systematic method to compare impact of a value added services on a Chinese cashless payment platform"
+# QUERY = "Systematic method to compare impact of 2 specific value added services on a Chinese cashless payment platform"
 # QUERY = "Cashless payment: the most impactful value added services for payment apps, lessons learned from Chinese tech-giants"
-
+# QUERY = "Applications of Generative AI on Chinese cashless payment platforms"
+QUERY = "Reasoning framework applied: Generative AI"
 load_dotenv()
 
 
@@ -79,14 +80,19 @@ def generate_file_name(query: str):
 def write_long_report(query: str = QUERY):
     english_file_name, vietnamese_file_name = gen_report_file_names(query)
     report_type = "research_report"
-    report = get_report_in_vietnamese(query, report_type)
-    # save the report to files
-    with open(english_file_name, "w") as f:
-        f.write(report["en"])
-    with open(vietnamese_file_name, "w") as f:
-        f.write(report["vi"])
-    print(f"Report saved to {english_file_name} and {vietnamese_file_name}")
 
+    report = asyncio.run(generate_report(query, report_type))
+    with open(english_file_name, "w") as f:
+        f.write(report)
+
+    # save the report to files
+    # report = get_report_in_vietnamese(query, report_type)
+    # with open(english_file_name, "w") as f:
+    #     f.write(report["en"])
+    # with open(vietnamese_file_name, "w") as f:
+    #     f.write(report["vi"])
+    # print(f"Report saved to {english_file_name} and {vietnamese_file_name}")
+    print(f"Report saved to {english_file_name}")
 
 def gen_report_file_names(query: str):
     file_prefix = generate_file_name(query)
@@ -117,7 +123,7 @@ def main():
     # get user input to write long/short report  ?
     # ls_type = input("Write long or short report ? (l: long/s: short): ")
     # query = input("Your research topic: ")
-    ls_type = 's'
+    ls_type = 'l'
     if ls_type.lower() == 's' or ls_type.lower() == 'short':
         write_short_report(query=QUERY)
     else:
