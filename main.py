@@ -15,7 +15,8 @@ from fad.fad_researcher import Researcher
 # QUERY = "Cashless payment: the most impactful value added services for payment apps, lessons learned from Chinese tech-giants"
 # QUERY = "Applications of Generative AI on Chinese cashless payment platforms"
 # QUERY = "Reasoning framework applied: Generative AI"
-QUERY = "Power duration metrics: for cycling performance training"
+# QUERY = "Power duration metrics: for cycling performance training"
+QUERY = "Cryotherapy: the most effective method for muscle recovery"
 load_dotenv()
 
 
@@ -82,17 +83,17 @@ def write_long_report(query: str = QUERY):
     english_file_name, vietnamese_file_name = gen_report_file_names(query)
     report_type = "research_report"
 
-    report = asyncio.run(generate_report(query, report_type))
-    with open(english_file_name, "w") as f:
-        f.write(report)
+    # report = asyncio.run(generate_report(query, report_type))
+    # with open(english_file_name, "w") as f:
+    #     f.write(report)
 
     # save the report to files
-    # report = get_report_in_vietnamese(query, report_type)
-    # with open(english_file_name, "w") as f:
-    #     f.write(report["en"])
-    # with open(vietnamese_file_name, "w") as f:
-    #     f.write(report["vi"])
-    # print(f"Report saved to {english_file_name} and {vietnamese_file_name}")
+    report = get_report_in_vietnamese(query, report_type)
+    with open(english_file_name, "w") as f:
+        f.write(report["en"])
+    with open(vietnamese_file_name, "w") as f:
+        f.write(report["vi"])
+    print(f"Report saved to {english_file_name} and {vietnamese_file_name}")
     print(f"Report saved to {english_file_name}")
 
 def gen_report_file_names(query: str):
