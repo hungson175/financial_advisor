@@ -14,7 +14,8 @@ from fad.fad_researcher import Researcher
 # QUERY = "Systematic method to compare impact of 2 specific value added services on a Chinese cashless payment platform"
 # QUERY = "Cashless payment: the most impactful value added services for payment apps, lessons learned from Chinese tech-giants"
 # QUERY = "Applications of Generative AI on Chinese cashless payment platforms"
-QUERY = "Reasoning framework applied: Generative AI"
+# QUERY = "Reasoning framework applied: Generative AI"
+QUERY = "Power duration metrics: for cycling performance training"
 load_dotenv()
 
 
