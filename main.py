@@ -9,6 +9,7 @@ from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv
 
 from fad.fad_researcher import Researcher
+from fad.generators.generate_agent import choose_translation_agent, GeneratedAgent
 
 # QUERY = "Research on FnB  market in Vietnam"
 # QUERY = "Systematic method to compare impact of 2 specific value added services on a Chinese cashless payment platform"
@@ -39,13 +40,11 @@ async def generate_report(query, report_type="research_report", report_source="w
 
 def get_report_in_vietnamese(query: str, report_type: str) -> dict:
     report = asyncio.run(generate_report(query, report_type))
+    translator_role_data: GeneratedAgent = choose_translation_agent(query)
     llm = ChatOpenAI(model_name="gpt-4o")
     prompt_template = ChatPromptTemplate.from_messages([
-        ("system",
-         """You are very skillful translator. 
-         Your goal is to translate the following report into Vietnamese - make sure to keep the meaning,tone, and references of the report intact."""),
-        # this will be auto generate from query
-        ("human", "{report}")
+        ("system", translator_role_data.agent_role_prompt),
+        ("human", "=== The original REPORT ===\n {report}")
     ])
     translator = prompt_template | llm
     result = translator.invoke(input={"report": report})
@@ -95,6 +94,7 @@ def write_long_report(query: str = QUERY):
         f.write(report["vi"])
     print(f"Report saved to {english_file_name} and {vietnamese_file_name}")
     print(f"Report saved to {english_file_name}")
+
 
 def gen_report_file_names(query: str):
     file_prefix = generate_file_name(query)
