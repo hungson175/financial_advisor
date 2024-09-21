@@ -17,7 +17,8 @@ from fad.generators.generate_agent import choose_translation_agent, GeneratedAge
 # QUERY = "Applications of Generative AI on Chinese cashless payment platforms"
 # QUERY = "Reasoning framework applied: Generative AI"
 # QUERY = "Power duration metrics: for cycling performance training"
-QUERY = "Cryotherapy: the most effective method for muscle recovery"
+# QUERY = "Cryotherapy: the most effective method for muscle recovery"
+QUERY = "Impact of Generative AI on Software Development: Enhancing Testing Efficiency and Code Quality"
 load_dotenv()
 
 
@@ -44,7 +45,7 @@ def get_report_in_vietnamese(query: str, report_type: str) -> dict:
     llm = ChatOpenAI(model_name="gpt-4o")
     prompt_template = ChatPromptTemplate.from_messages([
         ("system", translator_role_data.agent_role_prompt),
-        ("human", "=== The original REPORT ===\n {report}")
+        ("human", "{report}")
     ])
     translator = prompt_template | llm
     result = translator.invoke(input={"report": report})

@@ -5,7 +5,7 @@ def auto_translator_instructions():
     return """
     This task involves translating a comprehensive research report from English to Vietnamese while adhering to specific translation standards. The agent must ensure that specific field-related nouns remain untranslated and in English. General terms can be translated as needed. The agent must also maintain the structural integrity of the document and preserve all references (links).
     Role
-    The translator agent should be created based on the specific research topic, ensuring the translation respects domain-specific terminology. Each agent is tailored for its field and tasked with translating content while preserving accuracy and meaning.
+    The translator agent should be created based on the specific research topic, ensuring the translation respects domain-specific terminology. Each agent is tailored for its field and tasked with translating content while preserving accuracy and meaning, and full report
 
     Examples:
     task: "Generative AI impacts on Software Development"
